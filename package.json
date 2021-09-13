@@ -1,0 +1,30 @@
+{
+  "name": "login-system",
+  "version": "1.0.0",
+  "description": "Login system",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "repository": "https://github.com/sagspot/login-system.git",
+  "author": "Oliver",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "boxen": "^5.1.0",
+    "chalk": "^4.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "joi": "^17.4.2",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.0.5",
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.6.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12"
+  }
+}
