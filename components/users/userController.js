@@ -30,11 +30,11 @@ export const users_post_register = async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   const useremail = await User.findOne({ email: req.body.email.trim() });
-  if (useremail)
+  if (useremail && !isDeleted)
     return res.status(409).send('User already exist. Login Instead.');
 
   const username = await User.findOne({ username: req.body.username.trim() });
-  if (username)
+  if (username && !isDeleted)
     return res.status(409).send('User already exist. Login Instead.');
 
   const hash = await bcrypt.hashSync(req.body.password, 10);
@@ -94,76 +94,27 @@ export const users_post_login = async (req, res) => {
   if (!validPassword) return res.status(401).send('Authentication failed');
 
   try {
+    const { id, name, username, email, role, isActive } = currentUser;
+    const userDetails = { id, name, username, email, role };
+
     const token = jwt.sign(
-      {
-        id: currentUser._id,
-        name: currentUser.name,
-        username: currentUser.username,
-        email: currentUser.email,
-        role: currentUser.role,
-      },
+      { id, name, username, email, role },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRATION }
     );
-    const { id, name, username, email, role } = currentUser;
-    const userDetails = { id, name, username, email, role };
+
+    if (!isActive) {
+      user[0].isActive = true;
+      user[0].dateDeactivated = undefined;
+      await user.save();
+      console.log('Account restored');
+    }
 
     return res
       .status(200)
       .json({ message: 'Authentication successful', userDetails, token });
   } catch (err) {
-    return res.status(401).json({ err });
-  }
-};
-
-export const users_get_one = async (req, res) => {
-  const id = req.params.id;
-
-  const validateObjectId = await mongoose.isValidObjectId(id);
-  if (!validateObjectId)
-    return res.status(400).json({ message: 'Invalid user ID' });
-
-  console.log(req.userData);
-
-  try {
-    const user = await User.findById(id, { password: 0 });
-
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    return res.status(200).json({ user });
-  } catch (err) {
-    return res.status(500).json({ err });
-  }
-};
-
-export const users_post_patch = async (req, res) => {
-  const { error } = updateUserValidation(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-
-  const id = req.params.id;
-  const validateObjectId = await mongoose.isValidObjectId(id);
-  if (!validateObjectId)
-    return res.status(400).json({ message: 'Invalid user ID' });
-
-  try {
-    const user = await User.findById(id, { password: 0 });
-
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    const updateUser = await User.update(
-      { _id: id },
-      {
-        $set: {
-          name: req.body.name ? req.body.name : user.name,
-          username: req.body.username ? req.body.username : user.username,
-          email: req.body.email ? req.body.email : user.email,
-        },
-      }
-    );
-
-    return res.status(200).json({ message: 'user updated', updateUser });
-  } catch (err) {
-    return res.status(500).json({ err });
+    return res.status(500).json({ message: 'Something went wrong', err });
   }
 };
 
@@ -231,5 +182,94 @@ export const users_post_reset_link = async (req, res) => {
     return res.status(200).json({ message: 'Password reset sucessfully' });
   } catch (err) {
     return res.status(500).json({ message: 'An error occurred', err });
+  }
+};
+
+export const users_get_one = async (req, res) => {
+  const id = req.params.id;
+
+  const validateObjectId = await mongoose.isValidObjectId(id);
+  if (!validateObjectId)
+    return res.status(400).json({ message: 'Invalid user ID' });
+
+  try {
+    const user = await User.findById(id, { password: 0 });
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (req.userData.role === 'user' && req.userData.id !== user.id)
+      return res
+        .status(403)
+        .json({ message: 'Not authorized to view this resource' });
+
+    return res.status(200).json({ user });
+  } catch (err) {
+    return res.status(500).json({ err });
+  }
+};
+
+export const users_post_patch = async (req, res) => {
+  const { error } = updateUserValidation(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const id = req.params.id;
+  const validateObjectId = await mongoose.isValidObjectId(id);
+  if (!validateObjectId)
+    return res.status(400).json({ message: 'Invalid user ID' });
+
+  try {
+    const user = await User.findById(id, { password: 0 });
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (req.userData.role === 'user' && req.userData.id !== user.id)
+      return res
+        .status(403)
+        .json({ message: 'Not authorized to update this resource' });
+
+    const updateUser = await User.update(
+      { _id: id },
+      {
+        $set: {
+          name: req.body.name ? req.body.name : user.name,
+          username: req.body.username ? req.body.username : user.username,
+          email: req.body.email ? req.body.email : user.email,
+        },
+      }
+    );
+
+    return res.status(200).json({ message: 'user updated', updateUser });
+  } catch (err) {
+    return res.status(500).json({ err });
+  }
+};
+
+export const users_delete = async (req, res) => {
+  const id = req.params.id;
+
+  const validateObjectId = await mongoose.isValidObjectId(id);
+  if (!validateObjectId)
+    return res.status(400).json({ message: 'Invalid user ID' });
+
+  try {
+    const user = await User.findById(id, { password: 0 });
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (req.userData.role === 'user' && req.userData.id !== user.id)
+      return res
+        .status(403)
+        .json({ message: 'Not authorized to delete account' });
+
+    user.isActive = false;
+    user.dateDeactivated = Date.now();
+    await user.save();
+
+    return res.status(200).json({
+      message:
+        'Account temporarily deleted. If you wish to recover your account, please login within 30 days. Your account will be permanently deleted after 30 days and you cannot recover your data',
+    });
+  } catch (err) {
+    return res.status(500).json({ message: 'Something went wrong', err });
   }
 };

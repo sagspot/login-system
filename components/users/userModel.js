@@ -16,6 +16,9 @@ const userSchema = new mongoose.Schema(
     role: { type: String, enum: ['admin', 'user'], default: 'user' },
     isConfirmed: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
+    dateDeactivated: { type: Date },
+    isDeleted: { type: Boolean, default: false },
+    dateDeleted: { type: Date },
   },
   { timestamps: true }
 );
