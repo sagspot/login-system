@@ -32,11 +32,19 @@ export const updateUserValidation = (data) => {
   return schema.validate(data);
 };
 
-export const resetPassValidation = (data) => {
+export const resetPassValidationLink = (data) => {
   const schema = Joi.object({
     username: Joi.string(),
     email: Joi.string().email(),
   }).xor('username', 'email');
+
+  return schema.validate(data);
+};
+
+export const resetPassValidation = (data) => {
+  const schema = Joi.object({
+    password: Joi.string().min(4).required(),
+  });
 
   return schema.validate(data);
 };
