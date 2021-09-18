@@ -1,12 +1,7 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import boxen from 'boxen';
-import crypto from 'crypto';
 
 import sendEmail from '../utils/mailer.js';
 import User from './userModel.js';
-import { ConfirmToken, ResetToken } from './tokenModel.js';
 import { updateUserValidation } from '../middlewares/validation.js';
 
 export const users_get_all = async (req, res) => {
@@ -82,12 +77,7 @@ export const users_post_patch = async (req, res) => {
     
     <p>Account details updated.`;
 
-    console.log(
-      boxen(
-        `recipient: ${recipient} \n subject: ${subject} \n email: ${email}`,
-        { padding: 1 }
-      )
-    );
+    sendEmail(recipient, subject, email);
 
     return res.status(200).json({ message: 'user updated', updateUser });
   } catch (err) {
@@ -129,12 +119,7 @@ export const users_delete = async (req, res) => {
     
     <a href="${link}"><button>Change Password</button></a>`;
 
-    console.log(
-      boxen(
-        `recipient: ${recipient} \n subject: ${subject} \n email: ${email}`,
-        { padding: 1 }
-      )
-    );
+    sendEmail(recipient, subject, email);
 
     return res.status(200).json({
       message:

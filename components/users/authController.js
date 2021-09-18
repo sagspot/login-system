@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import boxen from 'boxen';
 import crypto from 'crypto';
 
 import sendEmail from '../utils/mailer.js';
@@ -66,17 +65,11 @@ export const users_post_register = async (req, res) => {
     <p>Thanks for creating your account. Confirm your email by clicking the link below.</p>
     <a href="${link}"><button>Confirm Account</button></a>`;
 
-    console.log(
-      boxen(
-        `recipient: ${recipient} \n subject: ${subject} \n email: ${email}`,
-        { padding: 1 }
-      )
-    );
+    sendEmail(recipient, subject, email);
 
     return res
       .status(200)
       .json({ user: loggedUser, token, confirmAccount: link });
-    // return sendEmail(recipient, subject, email);
   } catch (err) {
     return res.status(400).json({ err });
   }
@@ -114,12 +107,7 @@ export const users_post_confirm_link = async (req, res) => {
     <p>Use this link to confirm your account.</p>
     <a href="${link}"><button>Confirm Account</button></a>`;
 
-    console.log(
-      boxen(
-        `recipient: ${recipient} \n subject: ${subject} \n email: ${email}`,
-        { padding: 1 }
-      )
-    );
+    sendEmail(recipient, subject, email);
 
     return res.status(200).json({ message: 'Confirm account', link });
   } catch (err) {
@@ -157,12 +145,7 @@ export const users_post_confirm = async (req, res) => {
     const email = `<p>Howdy ${user.name},</p>    
     <p>Account confirmation successfull.</p>`;
 
-    console.log(
-      boxen(
-        `recipient: ${recipient} \n subject: ${subject} \n email: ${email}`,
-        { padding: 1 }
-      )
-    );
+    sendEmail(recipient, subject, email);
 
     return res
       .status(200)
@@ -211,12 +194,7 @@ export const users_post_login = async (req, res) => {
       const email = `<p>Howdy ${currentUser.name},</p>  
     <p>Your account has been recovered. Welcome back`;
 
-      console.log(
-        boxen(
-          `recipient: ${recipient} \n subject: ${subject} \n email: ${email}`,
-          { padding: 1 }
-        )
-      );
+      sendEmail(recipient, subject, email);
     }
 
     return res
@@ -255,14 +233,7 @@ export const users_post_reset_link = async (req, res) => {
     <p>You requested to change your password. Click the link below to change your password.</p>
     <a href="${link}"><button>Reset Password</button></a>`;
 
-    console.log(
-      boxen(
-        `recipient: ${recipient} \n subject: ${subject} \n email: ${email}`,
-        { padding: 1 }
-      )
-    );
-
-    // sendEmail(recipient, subject, email);
+    sendEmail(recipient, subject, email);
 
     return res
       .status(200)
@@ -313,12 +284,7 @@ export const users_post_reset = async (req, res) => {
     
     <a href="${link}"><button>Change Password</button></a>`;
 
-    console.log(
-      boxen(
-        `recipient: ${recipient} \n subject: ${subject} \n email: ${email}`,
-        { padding: 1 }
-      )
-    );
+    sendEmail(recipient, subject, email);
 
     return res.status(200).json({ message: 'Password reset sucessfully' });
   } catch (err) {

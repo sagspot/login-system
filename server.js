@@ -7,6 +7,7 @@ import chalk from 'chalk';
 
 import database from './db.js';
 import users from './components/users/users.js';
+import sendEmail from './components/utils/mailer.js';
 
 dotenv.config();
 

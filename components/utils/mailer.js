@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer';
 const sendEmail = async (recipient, subject, email) => {
   try {
     const transporter = nodemailer.createTransport({
+      pool: true,
       host: process.env.SMTP_HOST,
       port: 465,
       secure: true,
@@ -12,16 +13,24 @@ const sendEmail = async (recipient, subject, email) => {
       },
     });
 
-    await transporter.sendMail({
-      from: process.env.SMTP_USER,
+    const mailOptions = {
+      from: {
+        name: 'Advanced Login System',
+        address: process.env.SMTP_USER,
+      },
       to: recipient,
       subject,
+      // text,
       html: email,
-    });
+    };
 
-    console.log('/t Email sent successfully');
+    await transporter.sendMail(mailOptions, (err, info) => {
+      if (err) return console.log('Could not send email \n', err);
+
+      console.log('Email sent successfully \n', info);
+    });
   } catch (err) {
-    console.log('/t Could not send email /n', err);
+    console.log(err);
   }
 };
 
