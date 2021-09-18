@@ -73,9 +73,13 @@ export const users_post_patch = async (req, res) => {
 
     const recipient = updateUser.email;
     const subject = 'Account updated';
-    const email = `<p>Howdy ${updateUser.name},</p>
-    
-    <p>Account details updated.`;
+    const email = {
+      text: `Howdy ${updateUser.name},
+      Account details updated.`,
+
+      html: `<p>Howdy ${updateUser.name},</p>
+      <p>Account details updated</p>.`,
+    };
 
     sendEmail(recipient, subject, email);
 
@@ -111,13 +115,19 @@ export const users_delete = async (req, res) => {
 
     const recipient = user.email;
     const subject = 'Account Deactivated';
-    const email = `<p>Howdy ${user.name},</p>
+    const email = {
+      text: `Howdy ${user.name},
+      Your account has been temporarily deactivated. If you wish to recover your account, please login within 30 days.
+      If not recovered within 30 days, your account will permanently be deactivated and you cannot recover your data.
+      If you did not perform this action, your account might be compromised. Please change your password by clicking on the link below.
+      <a href="${link}">${link}</a>`,
 
-    <p>Your account has been temporarily deactivated. If you wish to recover your account, please login within 30 days. 
-    If not recovered within 30 days, your account will permanently be deactivated and you cannot recover your data</p>
-    <p>If you did not perform this action, your account might be compromised. Please change your password by clicking on the link below</p>
-    
-    <a href="${link}"><button>Change Password</button></a>`;
+      html: `<p>Howdy ${user.name},</p>
+      <p>Your account has been temporarily deactivated. If you wish to recover your account, please login within 30 days.
+      If not recovered within 30 days, your account will permanently be deactivated and you cannot recover your data</p>
+      <p>If you did not perform this action, your account might be compromised. Please change your password by clicking on the link below</p>
+      <a href="${link}"><button>Change Password</button></a>`,
+    };
 
     sendEmail(recipient, subject, email);
 

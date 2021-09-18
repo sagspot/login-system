@@ -60,10 +60,15 @@ export const users_post_register = async (req, res) => {
 
     const recipient = loggedUser.email;
     const subject = 'Confirm your email';
-    const email = `<p>Howdy ${loggedUser.name},</p>
-  
-    <p>Thanks for creating your account. Confirm your email by clicking the link below.</p>
-    <a href="${link}"><button>Confirm Account</button></a>`;
+    const email = {
+      text: `Howdy ${loggedUser.name},
+      Thanks for creating your account. Confirm your email by clicking the link below.</p>
+      <a href="${link}">${link}</a>`,
+
+      html: `<p>Howdy ${loggedUser.name},</p>
+      <p>Thanks for creating your account. Confirm your email by clicking the link below.</p>
+      <a href="${link}"><button>Confirm Account</button></a>`,
+    };
 
     sendEmail(recipient, subject, email);
 
@@ -103,9 +108,16 @@ export const users_post_confirm_link = async (req, res) => {
 
     const recipient = user.email;
     const subject = 'Account Confirmed';
-    const email = `<p>Howdy ${user.name},</p>    
-    <p>Use this link to confirm your account.</p>
-    <a href="${link}"><button>Confirm Account</button></a>`;
+
+    const email = {
+      text: `Howdy ${user.name},
+      Use this link to confirm your account.
+      <a href="${link}">${link}</a>`,
+
+      html: `<p>Howdy ${user.name},</p>
+      <p>Use this link to confirm your account.</p>
+      <a href="${link}"><button>Confirm Account</button></a>`,
+    };
 
     sendEmail(recipient, subject, email);
 
@@ -142,8 +154,13 @@ export const users_post_confirm = async (req, res) => {
 
     const recipient = user.email;
     const subject = 'Account Confirmed';
-    const email = `<p>Howdy ${user.name},</p>    
-    <p>Account confirmation successfull.</p>`;
+    const email = {
+      text: `Howdy ${user.name},
+      Account confirmation successfull.`,
+
+      html: `<p>Howdy ${user.name},</p>
+      <p>Account confirmation successfull.</p>`,
+    };
 
     sendEmail(recipient, subject, email);
 
@@ -191,8 +208,13 @@ export const users_post_login = async (req, res) => {
       // Send Email
       const recipient = currentUser.email;
       const subject = 'Account recovered';
-      const email = `<p>Howdy ${currentUser.name},</p>  
-    <p>Your account has been recovered. Welcome back`;
+      const email = {
+        text: `Howdy ${currentUser.name},
+        Your account has been recovered. Welcome back`,
+
+        html: `<p>Howdy ${currentUser.name},</p>
+        <p>Your account has been recovered. Welcome back</p>`,
+      };
 
       sendEmail(recipient, subject, email);
     }
@@ -228,10 +250,15 @@ export const users_post_reset_link = async (req, res) => {
 
     const recipient = currentUser.email;
     const subject = 'Reset password';
-    const email = `<p>Howdy ${currentUser.name},</p>
-    
-    <p>You requested to change your password. Click the link below to change your password.</p>
-    <a href="${link}"><button>Reset Password</button></a>`;
+    const email = {
+      text: `Howdy ${currentUser.name},
+      You requested to change your password. Click the link below to change your password.
+      <a href="${link}">${link}</a>`,
+
+      html: `<p>Howdy ${currentUser.name},</p>
+      <p>You requested to change your password. Click the link below to change your password.</p>
+      <a href="${link}"><button>Reset Password</button></a>`,
+    };
 
     sendEmail(recipient, subject, email);
 
@@ -277,12 +304,17 @@ export const users_post_reset = async (req, res) => {
 
     const recipient = user.email;
     const subject = 'Password changed';
-    const email = `<p>Howdy ${user.name},</p>
-    
-    <p>Your password has been successfully reset.</p>
-    <p>If you did not perform this action, your account might be compromised. Please change your password by clicking on the link below</p>
-    
-    <a href="${link}"><button>Change Password</button></a>`;
+    const email = {
+      text: `Howdy ${user.name},
+      Your password has been successfully reset.
+      If you did not perform this action, your account might be compromised. Please change your password by clicking on the link below
+      <a href="${link}">${link}</a>`,
+
+      html: `<p>Howdy ${user.name},</p>
+      <p>Your password has been successfully reset.</p>
+      <p>If you did not perform this action, your account might be compromised. Please change your password by clicking on the link below</p>
+      <a href="${link}"><button>Change Password</button></a>`,
+    };
 
     sendEmail(recipient, subject, email);
 
