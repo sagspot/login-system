@@ -19,6 +19,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.use("/api/v1/users", users);
+app.get("/", (res, req) => {
+  res.json({ message: "Welcome to the login system" });
+});
 
 app.use((req, res, next) => {
   const error = new Error("Not found");
