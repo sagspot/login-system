@@ -72,13 +72,15 @@ export const users_post_patch = async (req, res) => {
     );
 
     const recipient = updateUser.email;
-    const subject = 'Account updated';
+    const subject = 'Your Sagspot account details updated';
     const email = {
-      text: `Howdy ${updateUser.name},
-      Account details updated.`,
+      text: `${updateUser.name},
+      Your account details have been successfully updated.
+      - Team Sagspot`,
 
-      html: `<p>Howdy ${updateUser.name},</p>
-      <p>Account details updated</p>.`,
+      html: `<p>${updateUser.name},</p>
+      <p>Your account details have been successfully updated</p>.
+      <p>- Team Sagspot</p>`,
     };
 
     sendEmail(recipient, subject, email);
@@ -114,19 +116,23 @@ export const users_delete = async (req, res) => {
     const link = `${baseUrl}/api/v1/users/reset`;
 
     const recipient = user.email;
-    const subject = 'Account Deactivated';
+    const subject = 'Your Sagspot account temporarily deactivated';
     const email = {
-      text: `Howdy ${user.name},
-      Your account has been temporarily deactivated. If you wish to recover your account, please login within 30 days.
-      If not recovered within 30 days, your account will permanently be deactivated and you cannot recover your data.
-      If you did not perform this action, your account might be compromised. Please change your password by clicking on the link below.
-      <a href="${link}">${link}</a>`,
+      text: `${user.name},
+      Your account has been temporarily deactivated and is scheduled for permanent deactivation within 30days. 
+      If you wish to recover your account, please login within 30 days. If not recovered, your account will be permanently deactvated and 
+      you will not be able to recover your data.
+      If you did not perform this action, your account may have been compromised. Please change your password by clicking on the link below.
+      <a href="${link}">${link}</a>
+      -Team Sagspot`,
 
-      html: `<p>Howdy ${user.name},</p>
-      <p>Your account has been temporarily deactivated. If you wish to recover your account, please login within 30 days.
-      If not recovered within 30 days, your account will permanently be deactivated and you cannot recover your data</p>
-      <p>If you did not perform this action, your account might be compromised. Please change your password by clicking on the link below</p>
-      <a href="${link}"><button>Change Password</button></a>`,
+      html: `<p>${user.name},</p>
+      <p>Your account has been temporarily deactivated and is scheduled for permanent deactivation within 30days. 
+      If you wish to recover your account, please login within 30 days. If not recovered, your account will be permanently deactvated and 
+      you will not be able to recover your data</p>
+      <p>If you did not perform this action, your account may have been compromised. Please change your password by clicking on the link below</p>
+      <a href="${link}">${link}</a>
+      <p>-Team Sagspot</p>`,
     };
 
     sendEmail(recipient, subject, email);

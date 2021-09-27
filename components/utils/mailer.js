@@ -15,7 +15,7 @@ const sendEmail = async (recipient, subject, email) => {
 
     const mailOptions = {
       from: {
-        name: 'Advanced Login System',
+        name: 'Sagspot',
         address: process.env.SMTP_USER,
       },
       to: recipient,
