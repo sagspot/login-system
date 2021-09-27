@@ -11,11 +11,6 @@
   "repository": "https://github.com/sagspot/login-system.git",
   "author": "Oliver",
   "license": "MIT",
-  "engines": {
-    "node": "14.17.0",
-    "npm": "6.14.13",
-    "yarn": "1.22.10"
-  },
   "dependencies": {
     "bcrypt": "^5.0.1",
     "boxen": "^5.1.0",
