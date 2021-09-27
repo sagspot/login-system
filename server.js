@@ -1,30 +1,30 @@
-import dotenv from "dotenv";
-import express from "express";
-import cors from "cors";
-import morgan from "morgan";
-import boxen from "boxen";
-import chalk from "chalk";
+import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import boxen from 'boxen';
+import chalk from 'chalk';
 
-import database from "./db.js";
-import users from "./components/users/users.js";
+import database from './db.js';
+import users from './components/users/users.js';
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: '*' }));
 
-app.use(morgan("dev"));
+app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-app.use("/api/v1/users", users);
-app.get("/", (res, req) => {
-  res.json({ message: "Welcome to the login system" });
+app.use('/api/v1/users', users);
+app.get('/', (res, req) => {
+  res.json({ message: 'Welcome to the login system' });
 });
 
 app.use((req, res, next) => {
-  const error = new Error("Not found");
+  const error = new Error('Not found');
   error.status = 404;
   next(error);
 });
@@ -35,7 +35,7 @@ app.use((error, req, res, next) => {
   });
 });
 
-const PORT = process.env.port || 4000;
+const PORT = process.env.PORT || 4000;
 
 const server = async () => {
   try {

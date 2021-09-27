@@ -75,9 +75,7 @@ export const users_post_register = async (req, res) => {
 
     sendEmail(recipient, subject, email);
 
-    return res
-      .status(200)
-      .json({ user: loggedUser, token, confirmAccount: link });
+    return res.status(200).json({ user: loggedUser, token });
   } catch (err) {
     return res.status(400).json({ err });
   }
@@ -126,7 +124,7 @@ export const users_post_confirm_link = async (req, res) => {
 
     sendEmail(recipient, subject, email);
 
-    return res.status(200).json({ message: 'Confirm account', link });
+    return res.status(200).json({ message: 'Account confirmation link sent' });
   } catch (err) {
     return res.status(500).json({ message: 'An error occurred', err });
   }
@@ -249,6 +247,10 @@ export const users_post_reset_link = async (req, res) => {
       return res.status(401).send('Account not found.');
     const [currentUser] = user;
 
+    const OTPExists = await ResetToken.findOne({ userId: currentUser._id });
+
+    if (OTPExists) await OTPExists.delete();
+
     const resetUser = await new ResetToken({
       userId: currentUser.id,
       otp: Math.floor(Math.random() * 999999),
@@ -272,9 +274,7 @@ export const users_post_reset_link = async (req, res) => {
 
     sendEmail(recipient, subject, email);
 
-    return res
-      .status(200)
-      .json({ message: 'Password reset initiated', resetUser });
+    return res.status(200).json({ message: 'Password reset initiated' });
   } catch (err) {
     return res.status(500).json({ message: 'An error occurred', err });
   }
