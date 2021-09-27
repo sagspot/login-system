@@ -14,7 +14,6 @@ export const authenticate = (req, res, next) => {
 
 export const authorize = (...roles) => {
   return (req, res, next) => {
-    console.log(req.userData);
     if (!roles.includes(req.userData.role))
       return next(res.status(403).send('Access denied'));
     next();

@@ -1,4 +1,4 @@
-import Joi from "joi";
+import Joi from 'joi';
 
 export const registerValidation = (data) => {
   const schema = Joi.object({
@@ -16,7 +16,7 @@ export const loginValidation = (data) => {
     username: Joi.string(),
     email: Joi.string().email(),
     password: Joi.string().required(),
-  }).xor("username", "email");
+  }).xor('username', 'email');
 
   return schema.validate(data);
 };
@@ -36,7 +36,7 @@ export const resetPassValidationLink = (data) => {
   const schema = Joi.object({
     username: Joi.string(),
     email: Joi.string().email(),
-  }).xor("username", "email");
+  }).xor('username', 'email');
 
   return schema.validate(data);
 };
@@ -45,41 +45,6 @@ export const resetPassValidation = (data) => {
   const schema = Joi.object({
     otp: Joi.string().required(),
     password: Joi.string().min(4).required(),
-  });
-
-  return schema.validate(data);
-};
-
-export const createProductValidation = (data) => {
-  const schema = Joi.object({
-    name: Joi.string().required(),
-    price: Joi.number().required(),
-  });
-
-  return schema.validate(data);
-};
-
-export const updateProductValidation = (data) => {
-  const schema = Joi.object({
-    name: Joi.string(),
-    price: Joi.number(),
-  });
-
-  return schema.validate(data);
-};
-
-export const createOrderValidation = (data) => {
-  const schema = Joi.object({
-    product: Joi.required(),
-    quantity: Joi.number(),
-  });
-
-  return schema.validate(data);
-};
-
-export const updateOrderValidation = (data) => {
-  const schema = Joi.object({
-    quantity: Joi.number().required(),
   });
 
   return schema.validate(data);
