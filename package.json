@@ -12,7 +12,7 @@
   "author": "Oliver",
   "license": "MIT",
   "engines": {
-    "node": "14.17.0"
+    "node": "14.x"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
