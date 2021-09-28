@@ -13,6 +13,11 @@ import {
   resetPassValidation,
 } from '../middlewares/validation.js';
 
+/**
+ * @desc Register a new user
+ * @route POST /api/v1/users/auth/register
+ * @access Public
+ */
 export const users_post_register = async (req, res) => {
   const { error } = registerValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -37,16 +42,23 @@ export const users_post_register = async (req, res) => {
   try {
     const savedUser = await newUser.save();
 
-    const loggedUser = {
+    const token = jwt.sign(
+      { id: savedUser.id, role: savedUser.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: process.env.JWT_EXPIRATION,
+      }
+    );
+
+    const userInfo = {
       id: savedUser.id,
       name: savedUser.name,
       username: savedUser.username,
+      email: savedUser.email,
       role: savedUser.role,
+      isConfirmed: savedUser.isConfirmed,
+      token,
     };
-
-    const token = jwt.sign(loggedUser, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRATION,
-    });
 
     // Activate account
     const activateToken = await new ConfirmToken({
@@ -57,16 +69,16 @@ export const users_post_register = async (req, res) => {
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const link = `${baseUrl}/api/v1/users/auth/confirm/${savedUser.id}?token=${activateToken.token}`;
 
-    const recipient = loggedUser.email;
+    const recipient = savedUser.email;
     const subject = 'Confirm your Sagspot account';
     const email = {
-      text: `${loggedUser.name},
+      text: `${savedUser.name},
       Thanks for creating your Sagspot account. To get the most of Sagpot, please confirm your account by clicking the link below, 
       or copr and paste it in your favorite browser.
       <a href="${link}">${link}</a>
       - Team Sagspot`,
 
-      html: `<p>${loggedUser.name},</p>
+      html: `<p>${savedUser.name},</p>
       <p>Thanks for creating your Sagspot account. To get the most of Sagpot, please confirm your account by clicking the link below, 
       or copr and paste it in your favorite browser.</p>
       <a href="${link}">${link}</a>
@@ -75,9 +87,11 @@ export const users_post_register = async (req, res) => {
 
     sendEmail(recipient, subject, email);
 
-    return res.status(200).json({ user: loggedUser, token });
+    return res
+      .status(200)
+      .json({ message: 'Registration successful', user: userInfo });
   } catch (err) {
-    return res.status(400).json({ err });
+    return res.status(500).json({ message: 'Something went wrong', err });
   }
 };
 
@@ -90,7 +104,7 @@ export const users_post_confirm_link = async (req, res) => {
 
   try {
     const user = await User.findById(userId, { password: 0 });
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: 'Account not found' });
 
     if (user.isConfirmed)
       return res.status(400).json({ message: 'Account already confirmed' });
@@ -126,7 +140,7 @@ export const users_post_confirm_link = async (req, res) => {
 
     return res.status(200).json({ message: 'Account confirmation link sent' });
   } catch (err) {
-    return res.status(500).json({ message: 'An error occurred', err });
+    return res.status(500).json({ message: 'Something went wrong', err });
   }
 };
 
@@ -136,12 +150,12 @@ export const users_post_confirm = async (req, res) => {
 
   const validateObjectId = await mongoose.isValidObjectId(userId);
   if (!validateObjectId)
-    return res.status(400).json({ message: 'Invalid or expired link' });
+    return res.status(400).json({ message: 'Invalid or expired otp' });
 
   try {
     const user = await User.findById(userId, { password: 0 });
     if (!user)
-      return res.status(404).json({ message: 'Invalid or expired link' });
+      return res.status(404).json({ message: 'Invalid or expired otp' });
 
     const token = await ConfirmToken.findOne({
       userId: user._id,
@@ -149,7 +163,7 @@ export const users_post_confirm = async (req, res) => {
     });
 
     if (!token)
-      return res.status(404).json({ message: 'Invalid or expired link' });
+      return res.status(404).json({ message: 'Invalid or expired otp' });
 
     user.isConfirmed = true;
     await user.save();
@@ -169,14 +183,17 @@ export const users_post_confirm = async (req, res) => {
 
     sendEmail(recipient, subject, email);
 
-    return res
-      .status(200)
-      .json({ message: 'Account confirmation successfull' });
+    return res.status(200).json({ message: 'Account confirmation successful' });
   } catch (err) {
-    return res.status(500).json({ message: 'An error occurred', err });
+    return res.status(500).json({ message: 'Something went wrong', err });
   }
 };
 
+/**
+ * @desc Login a user
+ * @route POST /api/v1/users/auth/login
+ * @access Public
+ */
 export const users_post_login = async (req, res) => {
   const { error } = loginValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -196,14 +213,13 @@ export const users_post_login = async (req, res) => {
   if (!validPassword) return res.status(401).send('Authentication failed');
 
   try {
-    const { id, name, username, email, role, isActive } = currentUser;
-    const userDetails = { id, name, username, email, role };
+    const { id, name, username, email, role, isActive, isConfirmed } =
+      currentUser;
+    const token = jwt.sign({ id, role }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRATION,
+    });
 
-    const token = jwt.sign(
-      { id, name, username, email, role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRATION }
-    );
+    const userInfo = { id, name, username, email, role, isConfirmed, token };
 
     if (!isActive) {
       currentUser.isActive = true;
@@ -228,7 +244,7 @@ export const users_post_login = async (req, res) => {
 
     return res
       .status(200)
-      .json({ message: 'Authentication successful', userDetails, token });
+      .json({ message: 'Authentication successful', user: userInfo });
   } catch (err) {
     return res.status(500).json({ message: 'Something went wrong', err });
   }
@@ -276,7 +292,7 @@ export const users_post_reset_link = async (req, res) => {
 
     return res.status(200).json({ message: 'Password reset initiated' });
   } catch (err) {
-    return res.status(500).json({ message: 'An error occurred', err });
+    return res.status(500).json({ message: 'Something went wrong', err });
   }
 };
 
@@ -336,6 +352,6 @@ export const users_post_reset = async (req, res) => {
 
     return res.status(200).json({ message: 'Password reset sucessfully' });
   } catch (err) {
-    return res.status(500).json({ message: 'An error occurred', err });
+    return res.status(500).json({ message: 'Something went wrong', err });
   }
 };

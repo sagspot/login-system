@@ -4,6 +4,11 @@ import sendEmail from '../utils/mailer.js';
 import User from './userModel.js';
 import { updateUserValidation } from '../middlewares/validation.js';
 
+/**
+ * @desc Get all users
+ * @route GET /api/v1/users
+ * @access Private (Admin)
+ */
 export const users_get_all = async (req, res) => {
   try {
     const users = await User.find({}, { password: 0 });
@@ -12,10 +17,15 @@ export const users_get_all = async (req, res) => {
 
     return res.status(200).json({ users });
   } catch (err) {
-    return res.status(500).json({ err });
+    return res.status(500).json({ message: 'Something went wrong', err });
   }
 };
 
+/**
+ * @desc Get user profile
+ * @route GET /api/v1/users/:id
+ * @access Private
+ */
 export const users_get_one = async (req, res) => {
   const id = req.params.id;
 
@@ -36,10 +46,15 @@ export const users_get_one = async (req, res) => {
 
     return res.status(200).json({ user });
   } catch (err) {
-    return res.status(500).json({ err });
+    return res.status(500).json({ message: 'Something went wrong', err });
   }
 };
 
+/**
+ * @desc Update user profile
+ * @route PATCH /api/v1/users/:id
+ * @access Private
+ */
 export const users_post_patch = async (req, res) => {
   const { error } = updateUserValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -87,10 +102,15 @@ export const users_post_patch = async (req, res) => {
 
     return res.status(200).json({ message: 'user updated', updateUser });
   } catch (err) {
-    return res.status(500).json({ err });
+    return res.status(500).json({ message: 'Something went wrong', err });
   }
 };
 
+/**
+ * @desc Deactivate user account
+ * @route DELETE /api/v1/users/:id
+ * @access Private
+ */
 export const users_delete = async (req, res) => {
   const id = req.params.id;
 
