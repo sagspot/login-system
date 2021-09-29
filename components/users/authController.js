@@ -223,7 +223,10 @@ export const users_post_login = async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   const user = await User.find({
-    $or: [{ email: req.body.email }, { username: req.body.username }],
+    $or: [
+      { email: req.body.email.trim().toLowerCase() },
+      { username: req.body.username.trim().toLowerCase() },
+    ],
   });
 
   if (!user || user.length == 0) return res.status(401).send('Auth failed');
@@ -285,7 +288,10 @@ export const users_post_reset_link = async (req, res) => {
 
   try {
     const user = await User.find({
-      $or: [{ email: req.body.email }, { username: req.body.username }],
+      $or: [
+        { email: req.body.email.trim().toLowerCase() },
+        { username: req.body.username.trim().toLowerCase() },
+      ],
     });
 
     if (!user || user.length == 0)
