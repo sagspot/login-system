@@ -21,7 +21,7 @@ const router = express.Router();
 
 router
   .post('/auth/register', users_post_register)
-  .post('/auth/register/confirm/:id', users_post_confirm_link)
+  .get('/auth/register/confirm/:id', authenticate, users_post_confirm_link)
   .get('/auth/confirm/:id', users_post_confirm)
   .post('/auth/login', users_post_login)
   .post('/auth/reset', users_post_reset_link)

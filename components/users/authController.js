@@ -22,20 +22,24 @@ export const users_post_register = async (req, res) => {
   const { error } = registerValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const useremail = await User.findOne({ email: req.body.email.trim() });
+  const useremail = await User.findOne({
+    email: req.body.email.trim().toLowerCase(),
+  });
   if (useremail && !useremail.isDeleted)
-    return res.status(409).send('User already exist. Login Instead.');
+    return res.status(409).send('User already exists. Login Instead.');
 
-  const username = await User.findOne({ username: req.body.username.trim() });
+  const username = await User.findOne({
+    username: req.body.username.trim().toLowerCase(),
+  });
   if (username && !username.isDeleted)
-    return res.status(409).send('User already exist. Login Instead.');
+    return res.status(409).send('User already exists. Login Instead.');
 
   const hash = await bcrypt.hashSync(req.body.password, 10);
 
   const newUser = new User({
     name: req.body.name,
-    username: req.body.username,
-    email: req.body.email,
+    username: req.body.username.toLowerCase(),
+    email: req.body.email.toLowerCase(),
     password: hash,
   });
 
@@ -50,7 +54,7 @@ export const users_post_register = async (req, res) => {
       }
     );
 
-    const userInfo = {
+    const user = {
       id: savedUser.id,
       name: savedUser.name,
       username: savedUser.username,
@@ -60,25 +64,26 @@ export const users_post_register = async (req, res) => {
       token,
     };
 
-    // Activate account
+    // Account activation link
     const activateToken = await new ConfirmToken({
-      userId: savedUser.id,
+      userId: user.id,
       token: crypto.randomBytes(32).toString('hex'),
+      referrer: req.header('Referer'),
     }).save();
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const link = `${baseUrl}/api/v1/users/auth/confirm/${savedUser.id}?token=${activateToken.token}`;
+    const link = `${baseUrl}/api/v1/users/auth/confirm/${user.id}?token=${activateToken.token}`;
 
-    const recipient = savedUser.email;
+    const recipient = user.email;
     const subject = 'Confirm your Sagspot account';
     const email = {
-      text: `${savedUser.name},
+      text: `${user.name},
       Thanks for creating your Sagspot account. To get the most of Sagpot, please confirm your account by clicking the link below, 
-      or copr and paste it in your favorite browser.
+      or copy and paste it in your favorite browser.
       <a href="${link}">${link}</a>
       - Team Sagspot`,
 
-      html: `<p>${savedUser.name},</p>
+      html: `<p>${user.name},</p>
       <p>Thanks for creating your Sagspot account. To get the most of Sagpot, please confirm your account by clicking the link below, 
       or copr and paste it in your favorite browser.</p>
       <a href="${link}">${link}</a>
@@ -87,14 +92,17 @@ export const users_post_register = async (req, res) => {
 
     sendEmail(recipient, subject, email);
 
-    return res
-      .status(200)
-      .json({ message: 'Registration successful', user: userInfo });
+    return res.status(200).json({ message: 'Registration successful', user });
   } catch (err) {
     return res.status(500).json({ message: 'Something went wrong', err });
   }
 };
 
+/**
+ * @desc Generate account confirmation link
+ * @route GET /auth/register/confirm/:id
+ * @access Private
+ */
 export const users_post_confirm_link = async (req, res) => {
   const userId = req.params.id;
 
@@ -106,6 +114,11 @@ export const users_post_confirm_link = async (req, res) => {
     const user = await User.findById(userId, { password: 0 });
     if (!user) return res.status(404).json({ message: 'Account not found' });
 
+    if (req.userData.role === 'user' && req.userData.id !== user.id)
+      return res
+        .status(403)
+        .json({ message: 'Not authorized to perform this action' });
+
     if (user.isConfirmed)
       return res.status(400).json({ message: 'Account already confirmed' });
 
@@ -116,9 +129,11 @@ export const users_post_confirm_link = async (req, res) => {
     const activateToken = await new ConfirmToken({
       userId: user.id,
       token: crypto.randomBytes(32).toString('hex'),
+      referrer: req.header('Referer'),
     }).save();
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
+
     const link = `${baseUrl}/api/v1/users/auth/confirm/${user.id}?token=${activateToken.token}`;
 
     const recipient = user.email;
@@ -126,12 +141,12 @@ export const users_post_confirm_link = async (req, res) => {
 
     const email = {
       text: `${user.name},
-      Use the link below to confirm your account.
+      Use the link below to confirm your Sagspot account.
       <a href="${link}">${link}</a>
       - Team Sagspot`,
 
       html: `<p>${user.name},</p>
-      <p>Use the link below to confirm your account.</p>
+      <p>Use the link below to confirm your Sagspot account.</p>
       <a href="${link}">${link}</a>
       <p>- Team Sagspot</p>`,
     };
@@ -144,9 +159,14 @@ export const users_post_confirm_link = async (req, res) => {
   }
 };
 
-export const users_post_confirm = async (req, res) => {
+/**
+ * @desc Account confirmation link
+ * @route GET /auth/confirm/:id
+ * @access Public
+ */
+export const users_post_confirm = async (req, res, done) => {
   const userId = req.params.id;
-  const confirmAcc = req.query.token;
+  const confirmationToken = req.query.token;
 
   const validateObjectId = await mongoose.isValidObjectId(userId);
   if (!validateObjectId)
@@ -159,11 +179,13 @@ export const users_post_confirm = async (req, res) => {
 
     const token = await ConfirmToken.findOne({
       userId: user._id,
-      token: confirmAcc,
+      token: confirmationToken,
     });
 
     if (!token)
       return res.status(404).json({ message: 'Invalid or expired otp' });
+
+    const referrer = token.referrer;
 
     user.isConfirmed = true;
     await user.save();
@@ -176,12 +198,14 @@ export const users_post_confirm = async (req, res) => {
       Your account confirmation was successfull. Welcome to Sagspot
       - Team Sagspot`,
 
-      html: `<p>Howdy ${er.name},</p>
+      html: `<p>${user.name},</p>
       <p>Your account confirmation was successfull. Welcome to Sagspot</p>
       <p>- Team Sagspot</p>`,
     };
 
     sendEmail(recipient, subject, email);
+
+    if (referrer !== undefined) return done(res.redirect(referrer));
 
     return res.status(200).json({ message: 'Account confirmation successful' });
   } catch (err) {
@@ -250,6 +274,11 @@ export const users_post_login = async (req, res) => {
   }
 };
 
+/**
+ * @desc Password reset otp
+ * @route POST /api/v1/users/auth/reset
+ * @access Public
+ */
 export const users_post_reset_link = async (req, res) => {
   const { error } = resetPassValidationLink(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -277,25 +306,34 @@ export const users_post_reset_link = async (req, res) => {
     const email = {
       text: `${currentUser.name},
       We have received a request to reset your password.
-      Use the otp below within the next 10 minutes to reset your password. If you ignore this message, your password won’t be changed.
+      Use the otp below within the next 10 minutes to reset your password. If you did not perform this action, disregard this email and don't do anything.
+      Do not share this otp with anyone as it can be used to reset your password and grant access to your account.
       ${resetUser.otp}
       - Team Sagspot`,
 
       html: `<p>${currentUser.name},</p>
       <p>We have received a request to reset your password.</p>
-      <p>Use the otp below within the next 10 minutes to reset your password. If you ignore this message, your password won’t be changed.</p>
+      <p>Use the otp below within the next 10 minutes to reset your password. If you did not perform this action, disregard this email and don't do anything.</p>
+      <p>Do not share this otp with anyone as it can be used to reset your password and grant access to your account.</p>
       ${resetUser.otp}
       <p>- Team Sagspot</p>`,
     };
 
     sendEmail(recipient, subject, email);
 
-    return res.status(200).json({ message: 'Password reset initiated' });
+    return res
+      .status(200)
+      .json({ message: 'Password reset initiated', userId: currentUser.id });
   } catch (err) {
     return res.status(500).json({ message: 'Something went wrong', err });
   }
 };
 
+/**
+ * @desc Reset password
+ * @route POST /api/v1/users/auth/reset/:id
+ * @access Public
+ */
 export const users_post_reset = async (req, res) => {
   const userId = req.params.id;
   const OTP = req.body.otp;
@@ -332,7 +370,6 @@ export const users_post_reset = async (req, res) => {
     const subject = 'Your Sagspot password was reset';
     const email = {
       text: `${user.name},
-      The password for your account has just been reset.
       Your password has been successfully reset.
       If you did not perform password reset, your account may have been compromised. 
       Please change your password by clicking on the link below or copy and paste it in your favorite browser
@@ -340,7 +377,6 @@ export const users_post_reset = async (req, res) => {
       - Team Sagspot`,
 
       html: `<p>${user.name},</p>
-      <p>The password for your account has just been reset.</p>
       <p>Your password has been successfully reset.</p>
       <p>If you did not perform password reset, your account may have been compromised. 
       Please change your password by clicking on the link below or copy and paste it in your favorite browser</p>
