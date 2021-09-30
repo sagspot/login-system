@@ -98,9 +98,18 @@ export const users_post_patch = async (req, res) => {
       <p>- Team Sagspot</p>`,
     };
 
+    const userInfo = {
+      id: updateUser.id,
+      name: updateUser.name,
+      username: updateUser.username,
+      email: updateUser.email,
+      role: updateUser.role,
+      isConfirmed: updateUser.isConfirmed,
+    };
+
     sendEmail(recipient, subject, email);
 
-    return res.status(200).json({ message: 'user updated', updateUser });
+    return res.status(200).json({ message: 'user updated', user: userInfo });
   } catch (err) {
     return res.status(500).json({ message: 'Something went wrong', err });
   }

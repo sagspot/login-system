@@ -61,7 +61,6 @@ export const users_post_register = async (req, res) => {
       email: savedUser.email,
       role: savedUser.role,
       isConfirmed: savedUser.isConfirmed,
-      token,
     };
 
     // Account activation link
@@ -92,7 +91,9 @@ export const users_post_register = async (req, res) => {
 
     sendEmail(recipient, subject, email);
 
-    return res.status(200).json({ message: 'Registration successful', user });
+    return res
+      .status(200)
+      .json({ message: 'Registration successful', user, AuthToken: token });
   } catch (err) {
     return res.status(500).json({ message: 'Something went wrong', err });
   }
@@ -243,7 +244,7 @@ export const users_post_login = async (req, res) => {
       expiresIn: process.env.JWT_EXPIRATION,
     });
 
-    const userInfo = { id, name, username, email, role, isConfirmed, token };
+    const userInfo = { id, name, username, email, role, isConfirmed };
 
     if (!isActive) {
       currentUser.isActive = true;
@@ -268,7 +269,11 @@ export const users_post_login = async (req, res) => {
 
     return res
       .status(200)
-      .json({ message: 'Authentication successful', user: userInfo });
+      .json({
+        message: 'Authentication successful',
+        user: userInfo,
+        AuthToken: token,
+      });
   } catch (err) {
     return res.status(500).json({ message: 'Something went wrong', err });
   }
