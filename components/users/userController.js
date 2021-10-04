@@ -35,7 +35,6 @@ export const users_get_one = async (req, res) => {
 
   try {
     const user = await User.findById(id, { password: 0 });
-    console.log(user.isDeleted);
     if (!user || user.isDeleted)
       return res.status(404).json({ message: 'User not found' });
 
