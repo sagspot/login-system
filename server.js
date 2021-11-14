@@ -19,8 +19,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.use('/api/v1/users', users);
-app.get('/', (res, req) => {
-  res.json({ message: 'Welcome to the login system' });
+app.get('/', (req, res) => {
+  res.redirect('https://sagspot-login.netlify.app/');
 });
 
 app.use((req, res, next) => {
